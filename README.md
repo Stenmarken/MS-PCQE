@@ -1,6 +1,6 @@
 # MS-PCQE
 
-- **Article title**: MS-PCQE: Efficient NR-PCQE via Multi-Scale Interaction Module in Immersive Communications, doi: 10.1109/TCE.2024.3423830
+- **Article title**: X. Chai and F. Shao, "MS-PCQE: Efficient NR-PCQE via Multi-Scale Interaction Module in Immersive Communications," in IEEE Transactions on Consumer Electronics, vol. 70, no. 3, pp. 5026-5039, Aug. 2024, doi: 10.1109/TCE.2024.3423830.
 
 
 - ## 📁 Projection maps
