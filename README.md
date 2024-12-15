@@ -1,6 +1,6 @@
 # MS-PCQE
 
-- **Article title**: "MS-PCQE: Efficient No-Reference Point Cloud Quality Evaluation via Multi-Scale Interaction Module in Immersive Communications
+- **Article title**: MS-PCQE: Efficient NR-PCQE via Multi-Scale Interaction Module in Immersive Communications, doi: 10.1109/TCE.2024.3423830
 
 
 - ## 📁 Projection maps
