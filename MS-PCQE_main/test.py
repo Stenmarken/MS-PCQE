@@ -171,8 +171,8 @@ def main(config):
 
 
         elif config.database == 'LSPCQA':
-            images_dir_10 = '../rotation/lspcqa_scale_0.75_512_12/frames_lspcqa'
-            images_dir_05 = '../rotation/lspcqa_scale_0.5_512_12/frames_lspcqa'
+            images_dir_10 = 'rotation/lspcqa_scale_0.75_512_12/frames_lspcqa'
+            images_dir_05 = 'rotation/lspcqa_scale_0.5_512_12/frames_lspcqa'
 
             datainfo_train = 'database/lspcqa_data_info/train_' + str(split + 1) + '.csv'
             datainfo_test = 'database/lspcqa_data_info/test_' + str(split + 1) + '.csv'
@@ -186,7 +186,17 @@ def main(config):
                                                                images_dir_10, images_dir_05, datainfo_test,
                                                                transformations_test, crop_size=config.crop_size,
                                                                mode_idx=1)
+        elif config.database == 'REHEARSE':
+            images_dir_10 = '../alpha_0.005_frames'
+            images_dir_05 = '../alpha_0.005_frames'
+            datainfo_train = 'database/lspcqa_data_info/train_' + str(split + 1) + '.csv'
+            datainfo_test = 'database/lspcqa_data_info/test_' + str(split + 1) + '.csv'
 
+
+            testset = VideoDataset_NR_image_with_fast_features(transformations_mask, config.sampling_div,
+                                                    images_dir_10, images_dir_05, datainfo_test,
+                                                    transformations_test, crop_size=config.crop_size,
+                                                    mode_idx=1)
 
 
 
@@ -200,8 +210,8 @@ def main(config):
         best = np.zeros(4)
         n_test = len(testset)
         print('Starting training:')
-        model.load_state_dict(torch.load('ckpts/' + config.database + '/ResNet_mean_with_fast_' + config.database + '_' + str(split+1) + '_' + 'best.pth'))  # SJTU/WPC
-
+        #model.load_state_dict(torch.load('ckpts/' + config.database + '/ResNet_mean_with_fast_' + config.database + '_' + str(split+1) + '_' + 'best.pth'))  # SJTU/WPC
+        model.load_state_dict(torch.load('ckpts/' + 'LSPCQA' + '/ResNet_mean_with_fast_' + 'LSPCQA' + '_' + str(split+1) + '_' + 'best.pth'))
 
         # Test
         model.eval()
@@ -214,8 +224,6 @@ def main(config):
         # do validation after each epoch
         with torch.no_grad():
             for i, (frames_dir_10_video, frames_dir_05_video, frames_dir_10_video_mask, frames_dir_05_video_mask, labels) in enumerate(tqdm_test):
-
-
                 y_test[i] = labels.item()
 
                 y_mid_ref = model(frames_dir_10_video, frames_dir_05_video, frames_dir_10_video_mask,frames_dir_05_video_mask, mode_idx=0)

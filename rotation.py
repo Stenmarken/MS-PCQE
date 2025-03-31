@@ -24,7 +24,7 @@ def generate_dir(path):
     return path
 
 # Camera Rotation
-def camera_rotation(path, img_path,frame_path,video_path,frame_index):
+def camera_rotation(path, img_path,frame_path,frame_index):
 
     pcd = o3d.io.read_point_cloud(path)
     if not os.path.exists(img_path+'/'):
@@ -69,25 +69,22 @@ def camera_rotation(path, img_path,frame_path,video_path,frame_index):
     del ctrl
     del vis
 
-def projection(path, img_path, frame_path, video_path, frame_index):
+def projection(path, img_path, frame_path, frame_index):
     # find all the objects 
     objs = os.walk(path)  
     for path,dir_list,file_list in objs:  
       for obj in file_list:  
         one_object_path = os.path.join(path, obj)
-        camera_rotation(one_object_path,  generate_dir(os.path.join(img_path,obj)),   generate_dir(os.path.join(frame_path,obj)),  generate_dir(os.path.join(video_path,obj)), frame_index)
+        camera_rotation(one_object_path,  generate_dir(os.path.join(img_path,obj)),   generate_dir(os.path.join(frame_path,obj)), frame_index)
 
 
 
 def main(config):
     img_path = config.img_path
     frame_path = config.frame_path
-    video_path = config.video_path
     generate_dir(img_path)
     generate_dir(frame_path)
-    generate_dir(video_path)
-    projection(config.path,img_path,frame_path,video_path,config.frame_index)
-
+    projection(config.path,img_path,frame_path,config.frame_index)
 
 
 if __name__ == '__main__':
@@ -99,7 +96,6 @@ if __name__ == '__main__':
     parser.add_argument('--frame_path', type=str, default='./lspcqa_scale_0.5_512_12/frames_lspcqa/')  # path to the generated frames
     parser.add_argument('--video_path', type=str,default='./lspcqa_scale_0.5_512_12/videos_lspcqa/')  # path to the generated videos, disable by default
     parser.add_argument('--frame_index', type=int, default=5)
-    config = parser.parse_args()
     config = parser.parse_args()
 
     main(config)
