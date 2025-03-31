@@ -1,2 +1,12 @@
 rotation.zip
 rotation/
+ms-pcqe-env/
+alpha_0.005_ply/
+alpha_0.005_imgs/
+alpha_0.005_frames/
+MS-PCQE_main/ckpts-old/
+MS-PCQE_main/ckpts/
+MS-PCQE_main/__pycache__/
+MS-PCQE_main/vit_pytorch/__pycache__/
+gen_images.sh
+test_rehearse.sh
