@@ -19,10 +19,19 @@ import ResNet_mean_with_fast
 import time
 from tqdm import tqdm
 import torch.nn.functional as F
+import os
+import json
 
 
-
-
+def save_output(y_output, alpha_str, output_path, score_dict):
+    if not os.path.exists(output_path):
+        prev = {}
+    else:
+        with open(output_path, 'r') as f:
+            prev = json.load(f)
+    prev[alpha_str] = score_dict
+    with open(output_path, 'w') as f:
+        json.dump(prev, f, indent=4)
 
 def logistic_func(X, bayta1, bayta2, bayta3, bayta4):
     logisticPart = 1 + np.exp(np.negative(np.divide(X - bayta3, np.abs(bayta4))))
@@ -187,11 +196,15 @@ def main(config):
                                                                transformations_test, crop_size=config.crop_size,
                                                                mode_idx=1)
         elif config.database == 'REHEARSE':
-            images_dir_10 = '../alpha_0.005_frames'
-            images_dir_05 = '../alpha_0.005_frames'
-            datainfo_train = 'database/lspcqa_data_info/train_' + str(split + 1) + '.csv'
-            datainfo_test = 'database/lspcqa_data_info/test_' + str(split + 1) + '.csv'
+            #images_dir_10 = '../alpha_0.005_frames_s_0.6'
+            #images_dir_05 = '../alpha_0.005_frames_s_0.4'
+            images_dir_10 = config.frame_dir_06
+            images_dir_05 = config.frame_dir_04
 
+            #datainfo_train = 'database/rehearse_data_info/train_' + str(split + 1) + '.csv'
+            #datainfo_test = 'database/rehearse_data_info/test_' + str(split + 1) + '.csv'
+            datainfo_train = config.csv_path
+            datainfo_test = config.csv_path
 
             testset = VideoDataset_NR_image_with_fast_features(transformations_mask, config.sampling_div,
                                                     images_dir_10, images_dir_05, datainfo_test,
@@ -211,8 +224,8 @@ def main(config):
         n_test = len(testset)
         print('Starting training:')
         #model.load_state_dict(torch.load('ckpts/' + config.database + '/ResNet_mean_with_fast_' + config.database + '_' + str(split+1) + '_' + 'best.pth'))  # SJTU/WPC
-        model.load_state_dict(torch.load('ckpts/' + 'LSPCQA' + '/ResNet_mean_with_fast_' + 'LSPCQA' + '_' + str(split+1) + '_' + 'best.pth'))
-
+        #model.load_state_dict(torch.load('ckpts/' + 'LSPCQA' + '/ResNet_mean_with_fast_' + 'LSPCQA' + '_' + str(split+1) + '_' + 'best.pth'))
+        model.load_state_dict(torch.load('ckpts-old/LSPCQA/ResNet_mean_with_fast_LSPCQA_1_best.pth'))
         # Test
         model.eval()
         y_output = np.zeros(n_test)
@@ -220,18 +233,19 @@ def main(config):
 
         tqdm_test = tqdm(test_loader, ncols=80)
 
-
+        score_dict = {}
         # do validation after each epoch
         with torch.no_grad():
             for i, (frames_dir_10_video, frames_dir_05_video, frames_dir_10_video_mask, frames_dir_05_video_mask, labels) in enumerate(tqdm_test):
                 y_test[i] = labels.item()
-
                 y_mid_ref = model(frames_dir_10_video, frames_dir_05_video, frames_dir_10_video_mask,frames_dir_05_video_mask, mode_idx=0)
                 y_output[i] = y_mid_ref.item()
+                score_dict[labels.item()] = y_mid_ref.item()
 
 
 
             y_output_logistic = fit_function(y_test, y_output)
+            save_output(y_output, config.alpha_str, config.output_path, score_dict)
             test_PLCC = stats.pearsonr(y_output_logistic, y_test)[0]
             test_SROCC = stats.spearmanr(y_output, y_test)[0]
             test_RMSE = np.sqrt(((y_output_logistic-y_test) ** 2).mean())
@@ -266,6 +280,12 @@ if __name__ == '__main__':
     # input parameters
     parser.add_argument('--database', type=str, default='LSPCQA')
     parser.add_argument('--model_name', type=str, default='ResNet_mean_with_fast')
+    parser.add_argument('--frame_dir_06', type=str, required=True, help='Directory containing images with 0.6 zoom constant.')
+    parser.add_argument('--frame_dir_04', type=str, required=True, help='Directory containing images with 0.6 zoom constant.')
+    parser.add_argument('--csv_path', type=str, required=True, help='Path to csv file containing MOS for the point clouds.')
+    parser.add_argument('--output_path', type=str, required=True, help='Path to the file where the scores will be stored.')
+    parser.add_argument('--alpha_str', type=str, required=True, help='Attenuation value used in the fog distortion. Only meant for categorizing the results.')
+
 
     # training parameters
     parser.add_argument('--conv_base_lr', type=float, default=5e-5)
@@ -274,7 +294,7 @@ if __name__ == '__main__':
     parser.add_argument('--train_batch_size', type=int, default=8)
     parser.add_argument('--num_workers', type=int, default=0)
     parser.add_argument('--epochs', type=int, default=40)  # epochs = 40 实际epoch设置为40，数据集index扩大5倍，即每5次做一次数据测试与模型保存（好处是数据载入更快）
-    parser.add_argument('--split_num', type=int, default=5)
+    parser.add_argument('--split_num', type=int, default=1)
     parser.add_argument('--crop_size', type=int, default=512) # 512
     parser.add_argument('--sampling_div', type=int, default=6)
 
