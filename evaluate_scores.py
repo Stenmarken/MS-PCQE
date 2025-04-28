@@ -21,15 +21,17 @@ def evaluate_scores(scores_dict):
     for i, f in enumerate(file_names):
         scores = [scores_dict[key][f] for key in keys]
         sroccs[i] = stats.spearmanr(scores, true_scores)
+        print(f'scores for {f}: {list(map(lambda x: round(x, 2), scores))}')
 
     np_sroccs = np.array([r.statistic for r in sroccs])
     p_values = np.array([r.pvalue for r in sroccs])
-    print(f'np.std: {np.std(np_sroccs)}')
-    print(f'np.mean: {np.mean(np_sroccs)}')
+    print(f'np_sroccs: {np_sroccs}')
+    print(f'np.std: {np.std(np_sroccs):.2f}')
+    print(f'np.mean: {np.mean(np_sroccs):.2f}')
 
-    print(f'p_values: {p_values}')
+    print(f'p_values: {list(map(lambda x: float(round(x, 2)), p_values))}')
     combined = stats.combine_pvalues(method='fisher', pvalues=p_values)
-    print(f'Combined: {combined}')
+    print(f'Combined: {combined:}')
 
 
 
