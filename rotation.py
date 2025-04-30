@@ -26,7 +26,18 @@ def generate_dir(path):
 # Camera Rotation
 def camera_rotation(path, frame_path, zoom):
 
-    pcd = o3d.io.read_point_cloud(path)
+    print(f"{path}: {np.shape(np.fromfile(path, dtype=np.float32))}")
+    kitti_pc = np.fromfile(path, dtype=np.float32).reshape(-1, 4)
+    xyz = kitti_pc[:, :3]
+    intensities = kitti_pc[:, 3]
+
+    intensity_normalized = intensities / 255.0
+    colors = np.stack([intensity_normalized, intensity_normalized, intensity_normalized], axis=1)
+
+    pcd = o3d.geometry.PointCloud()
+    pcd.points = o3d.utility.Vector3dVector(xyz)
+    pcd.colors = o3d.utility.Vector3dVector(colors)
+
     vis = o3d.visualization.Visualizer()
     vis.create_window(width=512, height=512, left=5, top=5, visible=False)
     vis.add_geometry(pcd)
@@ -69,11 +80,11 @@ def camera_rotation(path, frame_path, zoom):
 
 def projection(path, frame_path, zoom):
     # find all the objects 
-    objs = os.walk(path)  
-    for path,dir_list,file_list in objs:  
-      for obj in file_list:  
+    objs = os.walk(path)
+    for path,dir_list,file_list in objs:
+      for obj in file_list:
         one_object_path = os.path.join(path, obj)
-        camera_rotation(one_object_path,   generate_dir(os.path.join(frame_path,obj)), zoom)
+        camera_rotation(one_object_path, generate_dir(os.path.join(frame_path,obj)), zoom)
 
 
 
@@ -81,6 +92,7 @@ def main(config):
     frame_path = config.frame_path
     zoom = config.zoom
     generate_dir(frame_path)
+    
     projection(config.path,frame_path, zoom)
 
 

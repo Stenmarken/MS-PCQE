@@ -9,3 +9,6 @@ MS-PCQE_main/ckpts/
 MS-PCQE_main/__pycache__/
 MS-PCQE_main/vit_pytorch/__pycache__/
 0-20/
+production_gen_images.sh
+MS-PCQE_main/production_generate_scores.sh
+rename_dirs.py

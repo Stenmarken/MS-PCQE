@@ -21,16 +21,23 @@ from tqdm import tqdm
 import torch.nn.functional as F
 import os
 import json
+from pathlib import Path
 
+def get_pc_from_frame_dir(frame_dir):
+    last_dir = Path(frame_dir).name
+    return last_dir.replace('.bin_frame_s_0.6', '')
 
-def save_output(y_output, alpha_str, output_path, score_dict):
-    if not os.path.exists(output_path):
+def save_output(config, score_dict, srcc, krcc):
+    key = get_pc_from_frame_dir(config.frame_dir_06)
+    inner = {"scores": score_dict, "SRCC": srcc, "KRCC": krcc}
+    if not os.path.exists(config.output_path):
         prev = {}
     else:
-        with open(output_path, 'r') as f:
+        with open(config.output_path, 'r') as f:
             prev = json.load(f)
-    prev[alpha_str] = score_dict
-    with open(output_path, 'w') as f:
+
+    prev[key] = inner
+    with open(config.output_path, 'w') as f:
         json.dump(prev, f, indent=4)
 
 def logistic_func(X, bayta1, bayta2, bayta3, bayta4):
@@ -242,15 +249,15 @@ def main(config):
                 y_output[i] = y_mid_ref.item()
                 score_dict[labels.item()] = y_mid_ref.item()
 
-
-
             y_output_logistic = fit_function(y_test, y_output)
-            save_output(y_output, config.alpha_str, config.output_path, score_dict)
             test_PLCC = stats.pearsonr(y_output_logistic, y_test)[0]
             test_SROCC = stats.spearmanr(y_output, y_test)[0]
             test_RMSE = np.sqrt(((y_output_logistic-y_test) ** 2).mean())
             test_KROCC = scipy.stats.kendalltau(y_output, y_test)[0]
             print("Test results: SROCC={:.4f}, KROCC={:.4f}, PLCC={:.4f}, RMSE={:.4f}".format(test_SROCC, test_KROCC, test_PLCC, test_RMSE))
+
+            save_output(config=config, score_dict=score_dict, srcc=test_SROCC, krcc=test_KROCC)
+
             final[0:4] = [test_SROCC, test_KROCC, test_PLCC, test_RMSE]
             final_all[split, :] = final
 
@@ -284,8 +291,6 @@ if __name__ == '__main__':
     parser.add_argument('--frame_dir_04', type=str, required=True, help='Directory containing images with 0.6 zoom constant.')
     parser.add_argument('--csv_path', type=str, required=True, help='Path to csv file containing MOS for the point clouds.')
     parser.add_argument('--output_path', type=str, required=True, help='Path to the file where the scores will be stored.')
-    parser.add_argument('--alpha_str', type=str, required=True, help='Attenuation value used in the fog distortion. Only meant for categorizing the results.')
-
 
     # training parameters
     parser.add_argument('--conv_base_lr', type=float, default=5e-5)
